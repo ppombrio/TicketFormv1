@@ -9,7 +9,10 @@ Talisman(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickets.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
+@app.route('/initdb')
+def initdb():
+    db.create_all()
+    return "✅ Database initialized!"
 # Define Ticket model
 class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
