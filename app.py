@@ -17,20 +17,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-from flask import session
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST' and request.form['password'] == os.environ.get('ADMIN_PASSWORD'):
-        session['logged_in'] = True
-        return redirect('/tickets')
-    return render_template('login.html')
-
-@app.before_request
-def require_login():
-    protected_paths = ['/tickets', '/download']
-    if any(request.path.startswith(p) for p in protected_paths) and not session.get('logged_in'):
-        return redirect('/login')
 
 # Ticket model
 class Ticket(db.Model):
