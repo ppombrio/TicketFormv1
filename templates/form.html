@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Ticket</title>
+</head>
+<body>
+    <h2>Submit a Work Ticket</h2>
+    <form method="post">
+        Name:<br><input type="text" name="name"><br><br>
+        Title*:<br><input type="text" name="title" required><br><br>
+        Description:<br><textarea name="description" rows="4" cols="40"></textarea><br><br>
+        Category:<br>
+        <select name="category">
+            <option value="IT">IT</option>
+            <option value="Lab Repair">Lab Repair</option>
+            <option value="Maintenance">Maintenance</option>
+        </select><br><br>
+        Parts:<br><input type="text" name="parts"><br><br>
+        Due Date:<br><input type="date" name="due_date"><br><br>
+        <input type="submit" value="Submit Ticket">
+    </form>
+</body>
+</html>
