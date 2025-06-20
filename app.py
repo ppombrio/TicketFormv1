@@ -29,6 +29,17 @@ class Ticket(db.Model):
     status = db.Column(db.String(20), default='Open')
     created_date = db.Column(db.String(20))
     due_date = db.Column(db.String(20))
+@app.route('/download')
+def download_csv():
+    import csv
+    from io import StringIO
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow([col.name for col in Ticket.__table__.columns])
+    for ticket in Ticket.query.all():
+        writer.writerow([getattr(ticket, col.name) for col in Ticket.__table__.columns])
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=tickets.csv"})
 
 # Route to submit a ticket
 @app.route('/', methods=['GET', 'POST'])
