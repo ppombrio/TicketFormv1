@@ -6,14 +6,19 @@ import os
 
 app = Flask(__name__)
 Talisman(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickets.db'
+
+# Use PostgreSQL if DATABASE_URL is set; otherwise fall back to local SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
+if DATABASE_URL.startswith("postgres://"):
+    # SQLAlchemy needs 'postgresql://' not 'postgres://'
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
-@app.route('/initdb')
-def initdb():
-    db.create_all()
-    return "✅ Database initialized!"
-# Define Ticket model
+
+# Ticket model
 class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -25,10 +30,7 @@ class Ticket(db.Model):
     created_date = db.Column(db.String(20))
     due_date = db.Column(db.String(20))
 
-# Create the database
-with app.app_context():
-    db.create_all()
-
+# Route to submit a ticket
 @app.route('/', methods=['GET', 'POST'])
 def submit_ticket():
     if request.method == 'POST':
@@ -44,17 +46,24 @@ def submit_ticket():
         db.session.add(new_ticket)
         db.session.commit()
         return redirect('/success')
-
     return render_template("form.html")
 
+# Confirmation page
 @app.route('/success')
 def success():
     return "✅ Ticket submitted successfully."
 
+# Admin view of all tickets
 @app.route('/tickets')
 def view_tickets():
     tickets = Ticket.query.all()
     return render_template("tickets.html", tickets=tickets)
+
+# One-time route to initialize database
+@app.route('/initdb')
+def initdb():
+    db.create_all()
+    return "✅ Database initialized."
 
 if __name__ == '__main__':
     app.run(debug=True)
