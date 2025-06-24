@@ -3,18 +3,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
 from datetime import datetime
 import os
-import csv
-from io import StringIO
 
 app = Flask(__name__)
 Talisman(app)
 
-# Use Render's DATABASE_URL or fallback to SQLite
-raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///tickets.db")
-if raw_db_url.startswith("postgres://"):
-    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+# Use PostgreSQL if DATABASE_URL is set; otherwise fall back to local SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -26,10 +24,26 @@ class Ticket(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100))
+    priority = db.Column(db.String(20))
+    location = db.Column(db.String(200))
+    urgent = db.Column(db.String(10))
+    estimated_time = db.Column(db.Float)
     parts = db.Column(db.String(200))
     status = db.Column(db.String(20), default='Open')
     created_date = db.Column(db.String(20))
     due_date = db.Column(db.String(20))
+
+@app.route('/download')
+def download_csv():
+    import csv
+    from io import StringIO
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow([col.name for col in Ticket.__table__.columns])
+    for ticket in Ticket.query.all():
+        writer.writerow([getattr(ticket, col.name) for col in Ticket.__table__.columns])
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=tickets.csv"})
 
 # Route to submit a ticket
 @app.route('/', methods=['GET', 'POST'])
@@ -40,6 +54,10 @@ def submit_ticket():
             title=request.form.get('title'),
             description=request.form.get('description'),
             category=request.form.get('category'),
+            priority=request.form.get('priority'),
+            location=request.form.get('location'),
+            urgent=request.form.get('urgent', 'No'),
+            estimated_time=request.form.get('estimated_time') or None,
             parts=request.form.get('parts'),
             due_date=request.form.get('due_date'),
             created_date=datetime.today().strftime("%Y-%m-%d")
@@ -60,18 +78,7 @@ def view_tickets():
     tickets = Ticket.query.all()
     return render_template("tickets.html", tickets=tickets)
 
-# Download tickets as CSV
-@app.route('/download')
-def download_csv():
-    si = StringIO()
-    writer = csv.writer(si)
-    writer.writerow([col.name for col in Ticket.__table__.columns])
-    for ticket in Ticket.query.all():
-        writer.writerow([getattr(ticket, col.name) for col in Ticket.__table__.columns])
-    output = si.getvalue()
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment; filename=tickets.csv"})
-
-# Optional: initialize the database (for local dev or first-time setup)
+# One-time route to initialize database
 @app.route('/initdb')
 def initdb():
     db.create_all()
