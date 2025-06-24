@@ -1,29 +1,60 @@
-<!DOCTYPE html>
-<html>
+""<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>All Tickets</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .table-dark th, .table-dark td {
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
-    <h2>Submitted Tickets</h2>
-    <table border="1">
-        <tr>
-            <th>ID</th><th>Name</th><th>Title</th><th>Description</th>
-            <th>Category</th><th>Parts</th><th>Status</th>
-            <th>Created Date</th><th>Due Date</th>
-        </tr>
-        {% for ticket in tickets %}
-        <tr>
-            <td>{{ ticket.id }}</td>
-            <td>{{ ticket.name }}</td>
-            <td>{{ ticket.title }}</td>
-            <td>{{ ticket.description }}</td>
-            <td>{{ ticket.category }}</td>
-            <td>{{ ticket.parts }}</td>
-            <td>{{ ticket.status }}</td>
-            <td>{{ ticket.created_date }}</td>
-            <td>{{ ticket.due_date }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="container mt-5">
+        <h2 class="mb-4">Submitted Tickets</h2>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name/Email</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Parts</th>
+                    <th>Location</th>
+                    <th>Urgent</th>
+                    <th>Priority</th>
+                    <th>Estimated Time</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr>
+                    <td>{{ ticket.id }}</td>
+                    <td>{{ ticket.name }}</td>
+                    <td>{{ ticket.title }}</td>
+                    <td>{{ ticket.description }}</td>
+                    <td>{{ ticket.category }}</td>
+                    <td>{{ ticket.parts }}</td>
+                    <td>{{ ticket.location }}</td>
+                    <td>{{ 'Yes' if ticket.urgent else 'No' }}</td>
+                    <td>{{ ticket.priority }}</td>
+                    <td>{{ ticket.estimated_time }}</td>
+                    <td>{{ ticket.status }}</td>
+                    <td>{{ ticket.created_date }}</td>
+                    <td>{{ ticket.due_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
