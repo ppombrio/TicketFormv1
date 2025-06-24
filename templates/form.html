@@ -1,57 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <title>Submit Ticket</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Submit Ticket</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body class="bg-light">
+<body class="bg-dark text-light">
+  <div class="container py-5">
+    <h2 class="mb-4">Submit a Work Ticket</h2>
+    <form method="post" class="text-light">
+      <!-- Name or Email -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Name or Email</label>
+        <input type="text" name="name" id="name" class="form-control" />
+      </div>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title text-center mb-4">Submit a Work Ticket</h3>
-                        <form method="post">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Name</label>
-                                <input type="text" class="form-control" name="name" id="name">
-                            </div>
-                            <div class="mb-3">
-                                <label for="title" class="form-label">Title*</label>
-                                <input type="text" class="form-control" name="title" id="title" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" name="description" id="description" rows="3"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
-                                <select class="form-select" name="category" id="category">
-                                    <option value="IT">IT</option>
-                                    <option value="Lab Repair">Lab Repair</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="parts" class="form-label">Parts</label>
-                                <input type="text" class="form-control" name="parts" id="parts">
-                            </div>
-                            <div class="mb-3">
-                                <label for="due_date" class="form-label">Due Date</label>
-                                <input type="date" class="form-control" name="due_date" id="due_date">
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Submit Ticket</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <p class="text-center text-muted mt-3">* Required fields</p>
-            </div>
+      <!-- Title -->
+      <div class="mb-3">
+        <label for="title" class="form-label">Title<span class="text-danger">*</span></label>
+        <input type="text" name="title" id="title" class="form-control" required />
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea name="description" id="description" rows="4" class="form-control"></textarea>
+      </div>
+
+      <!-- Category (buttons) -->
+      <div class="mb-3">
+        <label class="form-label d-block">Category</label>
+        <div class="btn-group w-100 flex-wrap" role="group" aria-label="Category">
+          <input type="radio" class="btn-check" name="category" id="catIT" value="IT" autocomplete="off" checked />
+          <label class="btn btn-outline-primary" for="catIT">IT</label>
+
+          <input type="radio" class="btn-check" name="category" id="catLabRepair" value="Lab Repair" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="catLabRepair">Lab Repair</label>
+
+          <input type="radio" class="btn-check" name="category" id="catMaintenance" value="Maintenance" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="catMaintenance">Maintenance</label>
+
+          <input type="radio" class="btn-check" name="category" id="catElectrical" value="Electrical" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="catElectrical">Electrical</label>
+
+          <input type="radio" class="btn-check" name="category" id="catOther" value="Other" autocomplete="off" />
+          <label class="btn btn-outline-primary" for="catOther">Other</label>
         </div>
-    </div>
+      </div>
 
+      <!-- Priority -->
+      <div class="mb-3">
+        <label class="form-label d-block">Priority</label>
+        <div class="btn-group w-100" role="group" aria-label="Priority">
+          <input type="radio" class="btn-check" name="priority" id="prioLow" value="Low" autocomplete="off" checked />
+          <label class="btn btn-outline-warning" for="prioLow">Low</label>
+
+          <input type="radio" class="btn-check" name="priority" id="prioMedium" value="Medium" autocomplete="off" />
+          <label class="btn btn-outline-warning" for="prioMedium">Medium</label>
+
+          <input type="radio" class="btn-check" name="priority" id="prioHigh" value="High" autocomplete="off" />
+          <label class="btn btn-outline-warning" for="prioHigh">High</label>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input type="text" name="location" id="location" class="form-control" placeholder="Enter location" />
+      </div>
+
+      <!-- Urgent Checkbox -->
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" value="Yes" id="urgent" name="urgent" />
+        <label class="form-check-label" for="urgent">
+          Mark as Urgent
+        </label>
+      </div>
+
+      <!-- Estimated Time -->
+      <div class="mb-3">
+        <label for="estimated_time" class="form-label">Estimated Time (hours)</label>
+        <input type="number" step="0.1" min="0" class="form-control" name="estimated_time" id="estimated_time" placeholder="e.g., 1.5" />
+      </div>
+
+      <!-- Parts -->
+      <div class="mb-3">
+        <label for="parts" class="form-label">Parts</label>
+        <input type="text" name="parts" id="parts" class="form-control" />
+      </div>
+
+      <!-- Due Date -->
+      <div class="mb-3">
+        <label for="due_date" class="form-label">Due Date</label>
+        <input type="date" name="due_date" id="due_date" class="form-control" />
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary w-100">Submit Ticket</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
