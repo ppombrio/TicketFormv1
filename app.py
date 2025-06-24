@@ -5,7 +5,10 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-Talisman(app)
+Talisman(app, content_security_policy={
+    'default-src': ["'self'"],
+    'style-src': ["'self'", 'https://cdn.jsdelivr.net'],
+    'script-src': ["'self'", 'https://cdn.jsdelivr.net'],
 
 # Use PostgreSQL if DATABASE_URL is set; otherwise fall back to local SQLite
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
