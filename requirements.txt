@@ -3,3 +3,4 @@ Flask-SQLAlchemy
 gunicorn
 flask_talisman
 psycopg2-binary
+Flask-Mail
