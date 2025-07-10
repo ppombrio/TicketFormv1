@@ -1,91 +1,73 @@
-from flask import Flask, render_template, request, redirect, Response
-from flask_sqlalchemy import SQLAlchemy
-from flask_talisman import Talisman
-from datetime import datetime
 import os
+import requests
+import pandas as pd
+import win32com.client as win32
+from datetime import datetime
 
-app = Flask(__name__)
+# Configuration
+CSV_URL = "https://ticketformv1.onrender.com/download"
+LOCAL_CSV_PATH = "C:\\Users\\ppombrio\\Documents\\tickets.csv"  # Adjust this if needed
 
-# Allow Bootstrap CDN with custom CSP
-csp = {
-    'default-src': "'self'",
-    'style-src': ["'self'", 'https://cdn.jsdelivr.net'],
-    'script-src': ["'self'", 'https://cdn.jsdelivr.net'],
-}
-Talisman(app, content_security_policy=csp)
+# Step 1: Download latest CSV
+try:
+    response = requests.get(CSV_URL)
+    response.raise_for_status()
+    with open(LOCAL_CSV_PATH, 'w', encoding='utf-8') as f:
+        f.write(response.text)
+    print("✅ CSV downloaded successfully.")
+except Exception as e:
+    print(f"❌ Failed to download CSV: {e}")
+    exit()
 
-# Database setup
-DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///tickets.db')
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Step 2: Load CSV
+try:
+    df = pd.read_csv(LOCAL_CSV_PATH)
+    df = df.dropna(subset=['due_date'])  # Filter out blank due dates
+except Exception as e:
+    print(f"❌ Failed to read CSV: {e}")
+    exit()
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Step 3: Initialize Outlook
+outlook = win32.Dispatch("Outlook.Application")
+namespace = outlook.GetNamespace("MAPI")
+calendar = namespace.GetDefaultFolder(9).Items  # 9 = olFolderCalendar
+calendar.IncludeRecurrences = True
+calendar.Sort("[Start]")
 
-db = SQLAlchemy(app)
+# Get existing subjects to avoid duplicates
+existing_subjects = {item.Subject.lower() for item in calendar}
 
-# Ticket model
-class Ticket(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    category = db.Column(db.String(100))
-    parts = db.Column(db.String(200))
-    location = db.Column(db.String(100))
-    status = db.Column(db.String(20), default='Open')
-    created_date = db.Column(db.String(20))
-    due_date = db.Column(db.String(20))
+# Step 4: Create calendar events
+for _, row in df.iterrows():
+    name = row.get("name", "")
+    title = row.get("title", "")
+    category = row.get("category", "General")
+    due_date_str = row.get("due_date", "")
+    created_date_str = row.get("created_date", "")
+    
+    # Format dates
+    try:
+        due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
+    except ValueError:
+        continue  # Skip invalid date
 
-# Home / form page
-@app.route('/', methods=['GET', 'POST'])
-def submit_ticket():
-    if request.method == 'POST':
-        due_date = request.form.get('due_date')
-        if not due_date:
-            return "❌ Due date is required.", 400  # Return error if missing
+    try:
+        start_date = datetime.strptime(created_date_str, "%Y-%m-%d")
+    except ValueError:
+        start_date = due_date
 
-        new_ticket = Ticket(
-            name=request.form.get('name'),
-            title=request.form.get('title'),
-            description=request.form.get('description'),
-            category=request.form.get('category'),
-            parts=request.form.get('parts'),
-            due_date=due_date,
-            created_date=datetime.today().strftime("%Y-%m-%d")
-        )
-        db.session.add(new_ticket)
-        db.session.commit()
-        return redirect('/success')
+    subject = f"TICKET: {title.strip()}"
+    if subject.lower() in existing_subjects:
+        continue  # Skip if already added
 
-    return render_template("form.html")
-
-
-@app.route('/success')
-def success():
-    return "✅ Ticket submitted successfully."
-
-@app.route('/tickets')
-def view_tickets():
-    tickets = Ticket.query.all()
-    return render_template("tickets.html", tickets=tickets)
-
-@app.route('/download')
-def download_csv():
-    import csv
-    from io import StringIO
-    si = StringIO()
-    writer = csv.writer(si)
-    writer.writerow([col.name for col in Ticket.__table__.columns])
-    for ticket in Ticket.query.all():
-        writer.writerow([getattr(ticket, col.name) for col in Ticket.__table__.columns])
-    output = si.getvalue()
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=tickets.csv"})
-
-@app.route('/initdb')
-def initdb():
-    db.create_all()
-    return "✅ Database initialized."
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    # Create new calendar event
+    appointment = outlook.CreateItem(1)  # 1 = olAppointmentItem
+    appointment.Subject = subject
+    appointment.Start = start_date
+    appointment.End = due_date
+    appointment.Body = f"{title}\nSubmitted by: {name}\nCategory: {category}"
+    appointment.Categories = category
+    appointment.ReminderSet = True
+    appointment.ReminderMinutesBeforeStart = 60
+    appointment.Save()
+    print(f"✅ Event created: {subject}")
