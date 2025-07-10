@@ -41,20 +41,25 @@ class Ticket(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 def submit_ticket():
     if request.method == 'POST':
+        due_date = request.form.get('due_date')
+        if not due_date:
+            return "❌ Due date is required.", 400  # Return error if missing
+
         new_ticket = Ticket(
             name=request.form.get('name'),
             title=request.form.get('title'),
             description=request.form.get('description'),
             category=request.form.get('category'),
             parts=request.form.get('parts'),
-            location=request.form.get('location'),
-            due_date=request.form.get('due_date'),
+            due_date=due_date,
             created_date=datetime.today().strftime("%Y-%m-%d")
         )
         db.session.add(new_ticket)
         db.session.commit()
         return redirect('/success')
+
     return render_template("form.html")
+
 
 @app.route('/success')
 def success():
